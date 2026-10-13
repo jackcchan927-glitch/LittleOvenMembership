@@ -1,9 +1,9 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Crumb & Co. Rewards",
+  title: "Little Oven Bakery Rewards",
   description:
-    "Crumb & Co.'s customer rewards hub — check your points, redeem merchandise, and see the latest events and promos.",
+    "Little Oven Bakery's customer rewards hub — check your points, redeem merchandise, and see the latest events and promos.",
 };
 
 export default function RootLayout({ children }) {

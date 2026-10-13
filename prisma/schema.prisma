@@ -30,6 +30,22 @@ model Customer {
   transactions PointTransaction[]
   redemptions  Redemption[]
   vouchers     Voucher[]
+  lovedOnes    LovedOne[]
+}
+
+// A birthday a customer wants to remember on behalf of someone they care about
+// (family, friends) — separate from the customer's own `birthday` field above.
+model LovedOne {
+  id              String    @id @default(cuid())
+  customerId      String
+  name            String
+  relationship    String?
+  dateOfBirth     DateTime
+  favouriteFlavor String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 // Every change to a customer's points balance, for a running history.
