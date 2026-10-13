@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// A staff/admin account for the bakery. Single-shop app — no merchant scoping elsewhere.
+model Merchant {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+// A customer's loyalty account.
+model Customer {
+  id                      String    @id @default(cuid())
+  name                    String
+  email                   String    @unique
+  phone                   String?
+  passwordHash            String
+  birthday                DateTime?
+  points                  Int       @default(0)
+  lastBirthdayVoucherYear Int? // guards against sending more than one birthday voucher per year
+  createdAt               DateTime  @default(now())
+
+  transactions PointTransaction[]
+  redemptions  Redemption[]
+  vouchers     Voucher[]
+}
+
+// Every change to a customer's points balance, for a running history.
+model PointTransaction {
+  id         String   @id @default(cuid())
+  customerId String
+  amount     Int // positive = earned, negative = spent on a redemption
+  reason     String
+  createdAt  DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+// A merchandise item customers can redeem with points.
+model Merchandise {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  imageUrl    String?
+  pointCost   Int
+  stock       Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  redemptions Redemption[]
+}
+
+// A customer's request to redeem a merchandise item for points.
+model Redemption {
+  id            String   @id @default(cuid())
+  customerId    String
+  merchandiseId String
+  pointsSpent   Int
+  status        String   @default("pending") // pending | fulfilled | cancelled
+  createdAt     DateTime @default(now())
+
+  customer    Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  merchandise Merchandise @relation(fields: [merchandiseId], references: [id], onDelete: Cascade)
+}
+
+// A shop event (tasting, workshop, etc). Upcoming / happening now / past is derived
+// from startDate/endDate at read time, not stored as a status field.
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String?
+  startDate   DateTime
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+// A promotion / discount campaign.
+model Promo {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String?
+  code        String?
+  startDate   DateTime
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+// A special voucher issued to a customer, e.g. a birthday-month discount sent by the merchant.
+model Voucher {
+  id            String    @id @default(cuid())
+  customerId    String
+  title         String
+  message       String?
+  code          String    @unique
+  discountType  String // percent | fixed
+  discountValue Float
+  reason        String    @default("birthday") // birthday | manual
+  expiresAt     DateTime?
+  redeemed      Boolean   @default(false)
+  redeemedAt    DateTime?
+  createdAt     DateTime  @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
