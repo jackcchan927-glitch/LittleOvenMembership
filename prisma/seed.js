@@ -1,18 +1,20 @@
 import "dotenv/config";
-import path from "node:path";
 import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 import bcrypt from "bcryptjs";
 
-const adapter = new PrismaBetterSqlite3({ url: path.join(process.cwd(), "dev.db") });
+const adapter = new PrismaLibSql({
+  url: process.env.TURSO_DATABASE_URL,
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const passwordHash = await bcrypt.hash("Admin123!", 10);
   await prisma.merchant.upsert({
-    where: { email: "admin@bakery.local" },
+    where: { email: "admin@littleovenbakery.local" },
     update: {},
-    create: { name: "Bakery Admin", email: "admin@bakery.local", passwordHash },
+    create: { name: "Little Oven Bakery Admin", email: "admin@littleovenbakery.local", passwordHash },
   });
 
   if ((await prisma.merchandise.count()) === 0) {
@@ -61,7 +63,7 @@ async function main() {
     });
   }
 
-  console.log("Seed complete. Merchant login: admin@bakery.local / Admin123!");
+  console.log("Seed complete. Merchant login: admin@littleovenbakery.local / Admin123!");
 }
 
 main()
